@@ -67,7 +67,7 @@ func (r *Request) GetApiUrl(uri string) string {
 func (r *Request) Get(uri string, params map[string]string) (resp *Response, err error) {
 	fmt.Printf("[get] received params: %+v", params)
 	if resp, err = r.request("GET", r.GetApiUrl(uri), params); err != nil {
-		return nil, err
+		return resp, err
 	}
 	return
 }
@@ -75,7 +75,7 @@ func (r *Request) Get(uri string, params map[string]string) (resp *Response, err
 // Update - Will initiate UPDATE request towards api
 func (r *Request) Update(uri string, params map[string]string) (resp *Response, err error) {
 	if resp, err = r.request("POST", r.GetApiUrl(uri), params); err != nil {
-		return nil, err
+		return resp, err
 	}
 	return
 }
@@ -83,7 +83,7 @@ func (r *Request) Update(uri string, params map[string]string) (resp *Response, 
 // Create - Will initiate UPDATE request towards api
 func (r *Request) Create(uri string, params map[string]string) (resp *Response, err error) {
 	if resp, err = r.request("POST", r.GetApiUrl(uri), params); err != nil {
-		return nil, err
+		return resp, err
 	}
 	return
 }
@@ -91,7 +91,7 @@ func (r *Request) Create(uri string, params map[string]string) (resp *Response, 
 // Delete - Will initiate DELETE request towards api
 func (r *Request) Delete(uri string, params map[string]string) (resp *Response, err error) {
 	if resp, err = r.request("DELETE", r.GetApiUrl(uri), params); err != nil {
-		return nil, err
+		return resp, err
 	}
 	return
 }
@@ -124,13 +124,13 @@ func (r *Request) request(method string, url string, params map[string]string) (
 	req.SetBasicAuth(r.Config.AccountSid, r.Config.AuthToken)
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return &Response{Response: resp}, err
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return &Response{Response: resp}, err
 	}
 
 	fmt.Printf("Response body bytes are: %s", bodyBytes)
@@ -138,11 +138,11 @@ func (r *Request) request(method string, url string, params map[string]string) (
 	var jsonData map[string]interface{}
 
 	if err := json.Unmarshal(bodyBytes, &jsonData); err != nil {
-		return nil, err
+		return &Response{Response: resp}, err
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("An unexpected response returned from Zang API (Status Code: %d): %s", resp.StatusCode, bodyBytes)
+		return &Response{Response: resp}, fmt.Errorf("An unexpected response returned from Zang API (Status Code: %d): %s", resp.StatusCode, bodyBytes)
 	}
 
 	return &Response{
